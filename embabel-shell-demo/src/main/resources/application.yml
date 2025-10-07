@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: embabel-shell-demo
+
+openrouter:
+  base-url: https://openrouter.ai
+  api-key: ${OPENROUTER_API_KEY}
+  completions-path: /api/v1/chat/completions
+
+gemini:
+  base-url: https://generativelanguage.googleapis.com
+  api-key: ${GEMINI_API_KEY}
+  completions-path: /v1beta/openai/chat/completions
+
+embabel:
+  models:
+    default-llm: qwen3:8b
+    #default-llm: deepseek/deepseek-chat-v3.1:free
+    #default-llm: gemini-2.0-flash
+    llms:
+      better: gpt-5-mini
+      cheaper: gpt-oss:20b
+      faster: llama3.2:latest
