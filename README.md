@@ -10,6 +10,19 @@ Sample projects using the [Embabel](https://github.com/embabel) Agent Framework.
 ## Prerequisites
 * JDK 21+
 * Docker and Docker Compose
+* I already have downloaded few LLMs locally, e.g. => Ollama3.2:latest (Run LLMs either docker or locally)
+
+- In my system Powershell:
+```
+C:\Users\abcha> ollama list
+NAME                        ID              SIZE      MODIFIED
+llama3.2:latest             a80c4f17acd5    2.0 GB    3 months ago
+mxbai-embed-large:latest    468836162de7    669 MB    6 months ago
+deepseek-r1:8b              28f8fd6cdc67    4.9 GB    8 months ago
+
+C:\Users\abcha>    ollama run llama3.2:latest
+>>> Send a message (/? for help)
+```
 
 ## References
 * [Embabel](https://github.com/embabel)

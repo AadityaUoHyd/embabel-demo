@@ -19,14 +19,21 @@ public class MovieInfoProviderAgent {
     @Action
     public MovieName getMovieName(MovieEnquiryRequest enquiryRequest, OperationContext context) {
         log.info("-------------getMovieName()----------------");
-        return context.ai()
+        MovieName movieName = context.ai()
                 .withDefaultLlm()
                 .createObjectIfPossible(
                         """
-                        Create a MovieName from the movie enquiry request by extracting their details: %s.
+                        Extract the movie name from this user enquiry: %s.
+                        Output only valid JSON for MovieName, like: {"name": "Extracted Movie Title"}.
                         """.formatted(enquiryRequest.request()),
                         MovieName.class
                 );
+        if (movieName == null) {
+            log.warn("Failed to extract movie name, using fallback");
+            String extracted = enquiryRequest.request().replaceAll(".*movie (.*)", "$1").trim();
+            return new MovieName(extracted);
+        }
+        return movieName;
     }
 
     @Action
