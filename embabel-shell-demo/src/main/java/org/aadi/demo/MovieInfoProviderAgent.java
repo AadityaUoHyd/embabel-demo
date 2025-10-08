@@ -5,11 +5,18 @@ import com.embabel.agent.api.annotation.Action;
 import com.embabel.agent.api.annotation.Agent;
 import com.embabel.agent.api.common.OperationContext;
 import com.embabel.agent.domain.io.UserInput;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.io.IOException;
+
 import java.util.List;
 
 @Agent(name = "movie-info-provider",
@@ -23,14 +30,13 @@ public class MovieInfoProviderAgent {
     public MovieBasicInfo getMovieBasicInfo(UserInput userInput, OperationContext context) {
         return context.ai()
                 .withDefaultLlm()
-                //.withLlm(OpenAiModels.GPT_41)
-                //.withLlm("qwen3:8b")
-                //.withFirstAvailableLlmOf("qwen3:8b", OpenAiModels.GPT_41)
-                //.withLlmByRole("faster")
                 .createObjectIfPossible(
                         """
-                        Create a MovieBasicInfo from this user input, extracting their details:
-                        %s""".formatted(userInput.getContent()),
+                        Extract the movie name from this user input: %s
+                        Create a MovieBasicInfo object with the movie's name and release date.
+                        Ensure the releaseDate is in the format 'yyyy-MM-dd' (e.g., '1994-10-14').
+                        Example output: {"name": "Pulp Fiction", "releaseDate": "1994-10-14"}
+                        """.formatted(userInput.getContent()),
                         MovieBasicInfo.class
                 );
     }
@@ -81,7 +87,9 @@ public class MovieInfoProviderAgent {
         return movie;
     }*/
 
-    public record MovieBasicInfo(String name, LocalDate releaseDate) {
+    public record MovieBasicInfo(String name,
+                                 @JsonDeserialize(using = CustomLocalDateDeserializer.class)
+                                 LocalDate releaseDate) {
     }
 
     public record MovieActors(List<String> actors) {
@@ -93,6 +101,28 @@ public class MovieInfoProviderAgent {
     public record Movie(String name, LocalDate releaseDate, String director, List<String> actors) {
         Movie(MovieBasicInfo info, MovieDirector director, MovieActors actors) {
             this(info.name(), info.releaseDate(), director.name(), actors.actors());
+        }
+    }
+
+    public static class CustomLocalDateDeserializer extends StdDeserializer<LocalDate> {
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        public CustomLocalDateDeserializer() {
+            this(null);
+        }
+
+        public CustomLocalDateDeserializer(Class<?> vc) {
+            super(vc);
+        }
+
+        @Override
+        public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            String date = p.getText();
+            try {
+                return LocalDate.parse(date, FORMATTER);
+            } catch (Exception e) {
+                throw new IOException("Failed to parse date: " + date, e);
+            }
         }
     }
 }
